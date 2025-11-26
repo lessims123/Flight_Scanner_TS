@@ -47,8 +47,8 @@ class ScannerConfig:
     max_stay_days: int = 30  # Séjour maximum en jours (pour aller-retour)
     stay_days_step: int = 1  # Pas entre les durées de séjour testées (1 = toutes les durées, exhaustif)
     date_step_days: int = 7  # Pas entre les dates testées (7 = toutes les semaines, exhaustif)
-    request_delay: float = 0.3  # Délai entre les requêtes en secondes (0.3 au lieu de 1 seconde)
-    max_concurrent_requests: int = 10  # Nombre de requêtes parallèles (10 pour accélérer sans perdre de deals)
+    request_delay: float = 0.5  # Délai entre les requêtes en secondes (augmenté pour respecter rate limit)
+    max_concurrent_requests: int = 3  # Nombre de requêtes parallèles (réduit pour respecter 300 req/min)
     max_price: float = 200.0  # Prix max pour vols directs (pas de limite pour vols avec escales vers Asie)
     discount_threshold: float = 0.5  # 50% de réduction minimum
     min_observations: int = 10  # Nombre minimum d'observations avant de notifier

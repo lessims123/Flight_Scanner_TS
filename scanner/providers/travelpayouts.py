@@ -2,6 +2,7 @@
 
 import aiohttp
 import logging
+import asyncio
 from datetime import date, datetime
 from typing import List, Optional
 from scanner.models import Flight
@@ -22,6 +23,10 @@ class TravelpayoutsFlightProvider:
         """
         self.config = config
         self._session: Optional[aiohttp.ClientSession] = None
+        self._rate_limit_remaining = 300  # Limite par défaut (300 req/min)
+        self._rate_limit_reset = None  # Timestamp de réinitialisation
+        self._last_request_time = 0.0  # Pour respecter le délai minimum
+        self._request_lock = asyncio.Lock()  # Lock pour synchroniser les requêtes
     
     async def _get_session(self) -> aiohttp.ClientSession:
         """Obtient ou crée une session HTTP."""
@@ -79,19 +84,67 @@ class TravelpayoutsFlightProvider:
             if return_month:
                 params["return_date"] = return_month
             
-            async with session.get(url, headers=headers, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return self._parse_flights(
-                        data, origin, destination, departure_date, return_date, max_price
-                    )
-                elif response.status == 401:
-                    logger.error("Token Travelpayouts invalide ou expiré")
-                    return []
-                else:
-                    error_text = await response.text()
-                    logger.error(f"Erreur API Travelpayouts: {response.status} - {error_text}")
-                    return []
+            # Gestion du rate limiting avec retry et backoff
+            max_retries = 3
+            retry_delay = 2.0  # Délai initial en secondes (augmenté)
+            
+            async with self._request_lock:
+                # Respecter un délai minimum entre requêtes (300 req/min = 1 req toutes les 0.2s)
+                # On met 0.25s pour avoir une marge
+                current_time = asyncio.get_event_loop().time()
+                time_since_last = current_time - self._last_request_time
+                min_delay = 0.25  # 240 req/min max pour être sûr
+                if time_since_last < min_delay:
+                    await asyncio.sleep(min_delay - time_since_last)
+                self._last_request_time = asyncio.get_event_loop().time()
+            
+            for attempt in range(max_retries):
+                # Vérifier les headers de rate limit de la réponse précédente
+                if self._rate_limit_remaining <= 20:
+                    wait_time = 60.0  # Attendre 1 minute si on approche de la limite
+                    logger.warning(f"Rate limit faible ({self._rate_limit_remaining}), attente de {wait_time}s")
+                    await asyncio.sleep(wait_time)
+                    self._rate_limit_remaining = 300  # Réinitialiser après l'attente
+                
+                async with session.get(url, headers=headers, params=params) as response:
+                    # Lire les headers de rate limit
+                    if "X-Rate-Limit-Remaining" in response.headers:
+                        try:
+                            self._rate_limit_remaining = int(response.headers["X-Rate-Limit-Remaining"])
+                        except:
+                            pass
+                    
+                    if "X-Rate-Limit-Reset" in response.headers:
+                        try:
+                            self._rate_limit_reset = int(response.headers["X-Rate-Limit-Reset"])
+                        except:
+                            pass
+                    
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_flights(
+                            data, origin, destination, departure_date, return_date, max_price
+                        )
+                    elif response.status == 429:
+                        # Rate limit dépassé - backoff exponentiel
+                        retry_after = retry_delay * (2 ** attempt)
+                        logger.warning(
+                            f"Rate limit dépassé (429) pour {origin}->{destination}, "
+                            f"attente de {retry_after:.1f}s avant retry {attempt + 1}/{max_retries}"
+                        )
+                        await asyncio.sleep(retry_after)
+                        continue  # Réessayer
+                    elif response.status == 401:
+                        logger.error("Token Travelpayouts invalide ou expiré")
+                        return []
+                    else:
+                        error_text = await response.text()
+                        logger.error(f"Erreur API Travelpayouts: {response.status} - {error_text}")
+                        return []
+            
+            # Si on arrive ici, tous les retries ont échoué
+            logger.error(f"Échec après {max_retries} tentatives pour {origin}->{destination}")
+            return []
         except Exception as e:
             logger.error(f"Erreur lors de la recherche de vols Travelpayouts: {e}")
             return []

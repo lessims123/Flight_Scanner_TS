@@ -145,11 +145,12 @@ class ScannerRunner:
         semaphore = asyncio.Semaphore(self.config.max_concurrent_requests)
         
         async def scan_with_semaphore(origin, dest, dep_date, ret_date):
-            """Wrapper pour limiter les requêtes parallèles."""
+            """Wrapper pour limiter les requêtes parallèles et respecter le rate limit."""
             async with semaphore:
                 try:
                     result = await self.scan_route(origin, dest, dep_date, ret_date)
-                    # Délai réduit entre les requêtes
+                    # Délai entre les requêtes pour respecter le rate limit (300 req/min = 1 req toutes les 0.2s)
+                    # On met 0.5s pour avoir une marge de sécurité
                     await asyncio.sleep(self.config.request_delay)
                     return result
                 except Exception as e:
