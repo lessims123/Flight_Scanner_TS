@@ -42,8 +42,14 @@ class DealDetector:
                 logger.debug(f"Vol aller simple ignoré: {flight.origin}->{flight.destination}")
                 continue
             
-            # Filtre prix maximum
-            if flight.price > self.config.max_price:
+            # Vérifier si c'est une destination asiatique avec escale
+            is_asia_with_stopover = (
+                flight.destination in self.config.asia_destinations 
+                and flight.has_stopover
+            )
+            
+            # Filtre prix maximum (sauf pour vols avec escales vers Asie)
+            if not is_asia_with_stopover and flight.price > self.config.max_price:
                 continue
             
             # Vérifier si on a assez d'historique
@@ -92,8 +98,9 @@ class DealDetector:
                     observations_count=observations
                 )
                 deals.append(deal)
+                deal_type = "avec escale (Asie)" if is_asia_with_stopover else "direct"
                 logger.info(
-                    f"Deal détecté: {flight.origin}->{flight.destination} "
+                    f"Deal détecté ({deal_type}): {flight.origin}->{flight.destination} "
                     f"à {flight.price}€ (habituel: {usual_price}€, "
                     f"réduction: {discount_percentage:.1f}%)"
                 )

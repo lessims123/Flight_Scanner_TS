@@ -5,7 +5,7 @@ import logging
 from datetime import date, timedelta
 from typing import List, Tuple
 from scanner.config import ScannerConfig
-from scanner.providers.amadeus import AmadeusFlightProvider
+from scanner.providers.travelpayouts import TravelpayoutsFlightProvider
 from scanner.storage import Storage
 from scanner.deal_detector import DealDetector
 from scanner.notifier import EmailNotifier
@@ -25,7 +25,11 @@ class ScannerRunner:
             config: Configuration du scanner
         """
         self.config = config
-        self.provider = AmadeusFlightProvider(config.amadeus)
+        # Utiliser Travelpayouts (obligatoire)
+        if not config.travelpayouts:
+            raise ValueError("TRAVELPAYOUTS_API_TOKEN doit être défini dans .env")
+        self.provider = TravelpayoutsFlightProvider(config.travelpayouts)
+        logger.info("Utilisation du provider Travelpayouts")
         self.storage = Storage(config.db_path)
         self.detector = DealDetector(self.storage, config)
         self.notifier = EmailNotifier(config.smtp)
@@ -101,12 +105,17 @@ class ScannerRunner:
                 f"Scan aller-retour: {origin} -> {destination} "
                 f"du {departure_date} au {return_date}"
             )
+            # Pour les destinations asiatiques, ne pas limiter le prix (pour permettre les vols avec escales)
+            # Pour les autres, limiter à max_price
+            is_asia = destination in self.config.asia_destinations
+            max_price = None if is_asia else self.config.max_price
+            
             flights = await self.provider.search_flights(
                 origin=origin,
                 destination=destination,
                 departure_date=departure_date,
                 return_date=return_date,
-                max_price=self.config.max_price
+                max_price=max_price
             )
             
             # Filtrer pour ne garder que les vols aller-retour

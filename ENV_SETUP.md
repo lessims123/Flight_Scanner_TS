@@ -3,10 +3,9 @@
 Créez un fichier `.env` à la racine du projet avec le contenu suivant :
 
 ```env
-# Configuration Amadeus API
-# Obtenez vos clés sur https://developers.amadeus.com
-AMADEUS_API_KEY=RmWCnnKFmjfmb0SyICBsXHuajcgvkfvy
-AMADEUS_API_SECRET=NE4jRUhIUZ6qyNxo
+# Configuration Travelpayouts API
+# Obtenez votre token gratuit sur https://www.travelpayouts.com
+TRAVELPAYOUTS_API_TOKEN=votre_token_api
 
 # Configuration SMTP pour les notifications email
 SMTP_HOST=smtp.gmail.com
@@ -22,7 +21,7 @@ EMAIL_TO=recipient@example.com
 
 ## Notes importantes
 
-1. **Amadeus API** : Les clés fournies sont déjà dans le fichier, mais vous pouvez les remplacer par les vôtres si nécessaire.
+1. **Travelpayouts API** : Gratuit avec quotas généreux, modèle d'affiliation. Obtenez votre token sur [travelpayouts.com](https://www.travelpayouts.com)
 
 2. **Gmail** : Pour utiliser Gmail, vous devez :
    - Activer la validation en 2 étapes

@@ -9,14 +9,12 @@ from dotenv import load_dotenv
 
 
 @dataclass
-class AmadeusConfig:
-    """Configuration pour l'API Amadeus."""
+class TravelpayoutsConfig:
+    """Configuration pour l'API Travelpayouts."""
     
-    api_key: str
-    api_secret: str
-    base_url: str = "https://api.amadeus.com"
-    token_url: str = "/v1/security/oauth2/token"
-    flight_offers_url: str = "/v2/shopping/flight-offers"
+    api_token: str
+    base_url: str = "https://api.travelpayouts.com"
+    flight_offers_url: str = "/v1/prices/cheap"
 
 
 @dataclass
@@ -51,14 +49,19 @@ class ScannerConfig:
     date_step_days: int = 7  # Pas entre les dates testées (7 = toutes les semaines, exhaustif)
     request_delay: float = 0.3  # Délai entre les requêtes en secondes (0.3 au lieu de 1 seconde)
     max_concurrent_requests: int = 10  # Nombre de requêtes parallèles (10 pour accélérer sans perdre de deals)
-    max_price: float = 200.0
+    max_price: float = 200.0  # Prix max pour vols directs (pas de limite pour vols avec escales vers Asie)
     discount_threshold: float = 0.5  # 50% de réduction minimum
     min_observations: int = 10  # Nombre minimum d'observations avant de notifier
+    asia_destinations: List[str] = field(default_factory=lambda: [
+        "BKK", "SIN", "HKG", "NRT", "HND", "ICN", "PEK", "PVG", "CAN", "KUL",
+        "MNL", "JKT", "HAN", "SGN", "BOM", "DEL", "BLR", "MAA", "DPS", "CGK",
+        "TPE", "KHH", "OKA", "FUK", "KIX", "NGO", "CTS", "GMP", "PUS", "CJU"
+    ])  # Destinations asiatiques pour lesquelles on accepte les vols avec escales sans limite de prix
     scan_interval_seconds: int = 3600  # 1 heure par défaut
     db_path: str = "flights.db"
     log_file: str = "scanner.log"
     
-    amadeus: AmadeusConfig = field(default=None)
+    travelpayouts: TravelpayoutsConfig = field(default=None)
     smtp: SMTPConfig = field(default=None)
     
     @classmethod
@@ -73,11 +76,13 @@ class ScannerConfig:
             with open(config_path, "r", encoding="utf-8") as f:
                 config_data = yaml.safe_load(f) or {}
         
-        # Configuration Amadeus depuis .env
-        amadeus_config = AmadeusConfig(
-            api_key=os.getenv("AMADEUS_API_KEY", ""),
-            api_secret=os.getenv("AMADEUS_API_SECRET", "")
-        )
+        # Configuration Travelpayouts depuis .env
+        travelpayouts_token = os.getenv("TRAVELPAYOUTS_API_TOKEN", "")
+        travelpayouts_config = None
+        if travelpayouts_token:
+            travelpayouts_config = TravelpayoutsConfig(
+                api_token=travelpayouts_token
+            )
         
         # Configuration SMTP depuis .env
         smtp_config = SMTPConfig(
@@ -104,11 +109,12 @@ class ScannerConfig:
             max_concurrent_requests=config_data.get("max_concurrent_requests", cls().max_concurrent_requests),
             max_price=config_data.get("max_price", cls().max_price),
             discount_threshold=config_data.get("discount_threshold", cls().discount_threshold),
+            asia_destinations=config_data.get("asia_destinations", cls().asia_destinations),
             min_observations=config_data.get("min_observations", cls().min_observations),
             scan_interval_seconds=config_data.get("scan_interval_seconds", cls().scan_interval_seconds),
             db_path=config_data.get("db_path", cls().db_path),
             log_file=config_data.get("log_file", cls().log_file),
-            amadeus=amadeus_config,
+            travelpayouts=travelpayouts_config,
             smtp=smtp_config
         )
         

@@ -12,15 +12,15 @@ Le scanner de vols est construit avec une architecture modulaire et asynchrone, 
 
 ### `scanner/config.py`
 - **ScannerConfig** : Configuration principale du scanner
-- **AmadeusConfig** : Configuration pour l'API Amadeus
+- **TravelpayoutsConfig** : Configuration pour l'API Travelpayouts
 - **SMTPConfig** : Configuration pour l'envoi d'emails
 - Charge la configuration depuis `config.yaml` et `.env`
 
 ### `scanner/providers/`
 - **base.py** : Interface `FlightProvider` (Protocol)
-- **amadeus.py** : Implémentation Amadeus avec :
-  - Authentification OAuth2 automatique
-  - Gestion du refresh de token
+- **travelpayouts.py** : Implémentation Travelpayouts avec :
+  - Authentification par token simple
+  - Conversion automatique RUB → EUR
   - Parsing des réponses API
   - Normalisation en objets `Flight`
 
@@ -62,9 +62,9 @@ main.py
       └─> Boucle infinie:
           └─> ScannerRunner.scan_cycle()
               ├─> Pour chaque (origine, destination, date):
-              │   └─> AmadeusFlightProvider.search_flights()
-              │       ├─> Authentification OAuth2 (si nécessaire)
-              │       └─> Appel API Amadeus
+              │   └─> TravelpayoutsFlightProvider.search_flights()
+              │       ├─> Authentification par token
+              │       └─> Appel API Travelpayouts
               │
               └─> Storage.store_price() (pour chaque vol)
               
@@ -100,7 +100,7 @@ Stocke l'historique des prix pour calculer les prix habituels :
 
 ## Gestion des erreurs
 
-- **Authentification Amadeus** : Retry automatique si le token expire
+- **Authentification API** : Token Travelpayouts simple, pas de refresh nécessaire
 - **Erreurs API** : Loggées, le scanner continue
 - **Erreurs email** : Loggées, le deal n'est pas marqué comme notifié (sera réessayé au prochain cycle)
 - **Erreurs de stockage** : Loggées, le scanner continue
@@ -134,6 +134,6 @@ Créer un nouveau module `scanner/notifiers/` et implémenter une interface comm
 ## Sécurité
 
 - Les identifiants sensibles sont dans `.env` (ignoré par git)
-- Les tokens Amadeus sont gérés automatiquement (expiration)
+- Le token Travelpayouts est géré automatiquement
 - Les mots de passe SMTP ne sont jamais loggés
 

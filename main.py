@@ -43,8 +43,8 @@ async def main():
         config = ScannerConfig.load()
         
         # Vérifier que les configurations essentielles sont présentes
-        if not config.amadeus.api_key or not config.amadeus.api_secret:
-            logger.error("AMADEUS_API_KEY et AMADEUS_API_SECRET doivent être définis dans .env")
+        if not config.travelpayouts:
+            logger.error("TRAVELPAYOUTS_API_TOKEN doit être défini dans .env")
             sys.exit(1)
         
         if not config.smtp.host or not config.smtp.user:

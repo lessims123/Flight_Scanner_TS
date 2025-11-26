@@ -4,7 +4,7 @@
 
 ### 1. Prérequis
 - Python 3.11+
-- Compte Amadeus (gratuit sur https://developers.amadeus.com)
+- **Travelpayouts API Token** : Gratuit sur https://www.travelpayouts.com
 - Compte email avec SMTP
 
 ### 2. Installation
@@ -23,8 +23,10 @@ pip install -r requirements.txt
 Créez un fichier `.env` à la racine du projet :
 
 ```env
-AMADEUS_API_KEY=votre_clé
-AMADEUS_API_SECRET=votre_secret
+# Travelpayouts API (gratuit avec quotas généreux)
+TRAVELPAYOUTS_API_TOKEN=votre_token
+
+# Configuration SMTP
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=votre_email@gmail.com

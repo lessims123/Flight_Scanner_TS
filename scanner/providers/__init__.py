@@ -1,7 +1,7 @@
 """Providers de vols."""
 
-from .amadeus import AmadeusFlightProvider
+from .travelpayouts import TravelpayoutsFlightProvider
 from .base import FlightProvider
 
-__all__ = ["AmadeusFlightProvider", "FlightProvider"]
+__all__ = ["TravelpayoutsFlightProvider", "FlightProvider"]
 

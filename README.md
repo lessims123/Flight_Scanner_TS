@@ -16,7 +16,7 @@ Un scanner automatique de billets d'avion qui surveille les prix depuis Paris ve
 ## 📋 Prérequis
 
 - Python 3.11 ou supérieur
-- Compte Amadeus avec API Key et Secret (gratuit sur [developers.amadeus.com](https://developers.amadeus.com))
+- **Travelpayouts API Token** : Gratuit avec quotas généreux ([travelpayouts.com](https://www.travelpayouts.com))
 - Compte email avec accès SMTP (Gmail, Outlook, etc.)
 
 ## 🚀 Installation
@@ -60,9 +60,9 @@ copy .env.example .env
 Éditez `.env` avec vos informations :
 
 ```env
-# Configuration Amadeus API
-AMADEUS_API_KEY=votre_clé_api
-AMADEUS_API_SECRET=votre_secret_api
+# Configuration Travelpayouts API
+# Obtenez votre token gratuit sur https://www.travelpayouts.com
+TRAVELPAYOUTS_API_TOKEN=votre_token_api
 
 # Configuration SMTP
 SMTP_HOST=smtp.gmail.com
@@ -97,7 +97,7 @@ python main.py
 ```
 
 Le scanner va :
-1. S'authentifier auprès de l'API Amadeus
+1. S'authentifier auprès de l'API Travelpayouts
 2. Scanner toutes les routes configurées
 3. Stocker les prix dans la base de données
 4. Détecter les deals
@@ -145,7 +145,7 @@ pip install -r requirements.txt
 
 ```bash
 nano .env
-# Remplir avec vos identifiants Amadeus et SMTP
+# Remplir avec vos identifiants Travelpayouts et SMTP
 ```
 
 ### 6. Tester le lancement
@@ -231,7 +231,7 @@ scanner/
 │   └── providers/
 │       ├── __init__.py
 │       ├── base.py         # Interface FlightProvider
-│       └── amadeus.py      # Implémentation Amadeus
+│       └── travelpayouts.py # Implémentation Travelpayouts
 ├── tests/
 │   ├── test_deal_detector.py
 │   └── test_storage.py
@@ -290,10 +290,10 @@ Niveaux de log : INFO, WARNING, ERROR
 
 ## 🔧 Dépannage
 
-### Erreur d'authentification Amadeus
+### Erreur d'authentification API
 
-- Vérifiez que `AMADEUS_API_KEY` et `AMADEUS_API_SECRET` sont corrects dans `.env`
-- Assurez-vous que vos clés sont valides sur [developers.amadeus.com](https://developers.amadeus.com)
+- Vérifiez que `TRAVELPAYOUTS_API_TOKEN` est correct dans `.env`
+- Obtenez votre token gratuit sur [travelpayouts.com](https://www.travelpayouts.com)
 
 ### Erreur d'envoi d'email
 
@@ -323,5 +323,5 @@ Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou un
 
 ## 📧 Support
 
-Pour toute question ou problème, consultez la documentation Amadeus : [developers.amadeus.com](https://developers.amadeus.com)
+Pour toute question ou problème, consultez la documentation Travelpayouts : [travelpayouts.github.io](https://travelpayouts.github.io/slate/)
 

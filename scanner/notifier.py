@@ -64,8 +64,14 @@ Prix: {flight.price:.2f} {flight.currency}
 Prix habituel: ~{deal.usual_price:.2f} {flight.currency}
 Réduction: {deal.discount_percentage:.1f}% moins cher !
 Nombre d'observations: {deal.observations_count}
-
 """
+        
+        if flight.has_stopover:
+            text += f"⚠️  VOL AVEC ESCALE(S)\n"
+            if flight.stopovers:
+                text += f"Escales: {flight.stopovers}\n"
+        
+        text += "\n"
         
         if flight.booking_url:
             text += f"Lien de réservation: {flight.booking_url}\n"
@@ -101,7 +107,15 @@ Nombre d'observations: {deal.observations_count}
         <div class="deal-box">
             <div class="route">{flight.origin} → {flight.destination}</div>
             <div class="price">{flight.price:.2f} {flight.currency}</div>
-            <div class="info"><strong>Compagnie:</strong> {flight.airline}</div>
+"""
+        
+        if flight.has_stopover:
+            html += f'            <div class="info" style="background-color: #fff3cd; padding: 5px; border-radius: 3px; margin: 10px 0;"><strong>⚠️ VOL AVEC ESCALE(S)</strong>'
+            if flight.stopovers:
+                html += f'<br>Escales: {flight.stopovers}'
+            html += '</div>\n'
+        
+        html += f"""            <div class="info"><strong>Compagnie:</strong> {flight.airline}</div>
             <div class="info"><strong>Date de départ:</strong> {flight.departure_date.strftime('%d/%m/%Y')}</div>
 """
         
