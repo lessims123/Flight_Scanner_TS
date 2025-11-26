@@ -1,0 +1,91 @@
+# Configuration du scanner de vols
+
+# Aéroports d'origine (codes IATA)
+origins:
+  - CDG  # Paris Charles de Gaulle
+  - ORY  # Paris Orly
+  - BVA  # Paris Beauvais
+
+# Destinations à scanner (codes IATA)
+# Vous pouvez ajouter/modifier cette liste selon vos besoins
+destinations:
+  # Europe
+  - LON  # Londres
+  - BCN  # Barcelone
+  - ROM  # Rome
+  - ATH  # Athènes
+  - LIS  # Lisbonne
+  - MAD  # Madrid
+  - AMS  # Amsterdam
+  - BER  # Berlin
+  - VIE  # Vienne
+  - PRG  # Prague
+  - BUD  # Budapest
+  - WAW  # Varsovie
+  - CPH  # Copenhague
+  - STO  # Stockholm
+  - OSL  # Oslo
+  - HEL  # Helsinki
+  - DUB  # Dublin
+  - EDI  # Édimbourg
+  - GLA  # Glasgow
+  
+  # Moyen-Orient
+  - DXB  # Dubaï
+  - DOH  # Doha
+  
+  # Asie
+  - BKK  # Bangkok
+  - SIN  # Singapour
+  - HKG  # Hong Kong
+  - NRT  # Tokyo
+  - ICN  # Séoul
+  
+  # Océanie
+  - SYD  # Sydney
+  - MEL  # Melbourne
+  - AKL  # Auckland
+  
+  # Amérique du Nord
+  - JFK  # New York
+  - LAX  # Los Angeles
+  - MIA  # Miami
+  - SFO  # San Francisco
+  - YVR  # Vancouver
+  - YYZ  # Toronto
+  
+  # Amérique du Sud
+  - GRU  # São Paulo
+  - EZE  # Buenos Aires
+  
+  # Afrique
+  - CPT  # Le Cap
+  - CAI  # Le Caire
+
+# Plage de dates à scanner (en jours à partir d'aujourd'hui)
+min_days_from_now: 7
+max_days_from_now: 120
+
+# Durée du séjour pour les billets aller-retour (en jours)
+min_stay_days: 3   # Séjour minimum (3 jours)
+max_stay_days: 30  # Séjour maximum (30 jours)
+
+# Prix maximum pour un deal (en EUR)
+max_price: 200
+
+# Seuil de réduction minimum pour considérer un deal (0.5 = 50%)
+discount_threshold: 0.5
+
+# Nombre minimum d'observations historiques avant de notifier un deal
+min_observations: 10
+
+# Intervalle entre chaque cycle de scan (en secondes)
+# 3600 = 1 heure, 7200 = 2 heures, etc.
+scan_interval_seconds: 3600
+
+# Chemin vers la base de données SQLite
+db_path: flights.db
+
+# Fichier de log
+log_file: scanner.log
+
