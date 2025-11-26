@@ -47,6 +47,10 @@ class ScannerConfig:
     max_days_from_now: int = 120
     min_stay_days: int = 3  # Séjour minimum en jours (pour aller-retour)
     max_stay_days: int = 30  # Séjour maximum en jours (pour aller-retour)
+    stay_days_step: int = 1  # Pas entre les durées de séjour testées (1 = toutes les durées, exhaustif)
+    date_step_days: int = 7  # Pas entre les dates testées (7 = toutes les semaines, exhaustif)
+    request_delay: float = 0.3  # Délai entre les requêtes en secondes (0.3 au lieu de 1 seconde)
+    max_concurrent_requests: int = 10  # Nombre de requêtes parallèles (10 pour accélérer sans perdre de deals)
     max_price: float = 200.0
     discount_threshold: float = 0.5  # 50% de réduction minimum
     min_observations: int = 10  # Nombre minimum d'observations avant de notifier
@@ -94,6 +98,10 @@ class ScannerConfig:
             max_days_from_now=config_data.get("max_days_from_now", cls().max_days_from_now),
             min_stay_days=config_data.get("min_stay_days", cls().min_stay_days),
             max_stay_days=config_data.get("max_stay_days", cls().max_stay_days),
+            stay_days_step=config_data.get("stay_days_step", cls().stay_days_step),
+            date_step_days=config_data.get("date_step_days", cls().date_step_days),
+            request_delay=config_data.get("request_delay", cls().request_delay),
+            max_concurrent_requests=config_data.get("max_concurrent_requests", cls().max_concurrent_requests),
             max_price=config_data.get("max_price", cls().max_price),
             discount_threshold=config_data.get("discount_threshold", cls().discount_threshold),
             min_observations=config_data.get("min_observations", cls().min_observations),

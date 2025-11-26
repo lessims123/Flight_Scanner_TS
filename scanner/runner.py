@@ -46,6 +46,7 @@ class ScannerRunner:
         """
         Génère la liste des paires de dates (départ, retour) à scanner.
         Pour chaque date de départ, génère plusieurs dates de retour avec séjour minimum.
+        Optimisé pour réduire le nombre de combinaisons.
         
         Returns:
             Liste de tuples (date_départ, date_retour) dans la plage configurée
@@ -53,16 +54,17 @@ class ScannerRunner:
         today = date.today()
         date_pairs = []
         
-        # Générer une date de départ par semaine pour éviter trop de requêtes
+        # Générer des dates de départ avec un pas configurable (par défaut toutes les 2 semaines)
         current_departure = today + timedelta(days=self.config.min_days_from_now)
         max_departure_date = today + timedelta(days=self.config.max_days_from_now)
         
         while current_departure <= max_departure_date:
-            # Pour chaque date de départ, générer plusieurs dates de retour
-            # avec séjour entre min_stay_days et max_stay_days
+            # Pour chaque date de départ, générer des dates de retour avec un pas configurable
+            # Exemple: avec stay_days_step=4, on teste 3, 7, 11, 15 jours au lieu de tous
             for stay_days in range(
                 self.config.min_stay_days,
-                min(self.config.max_stay_days + 1, 15)  # Limiter à 15 jours max pour éviter trop de combinaisons
+                min(self.config.max_stay_days + 1, 15),  # Limiter à 15 jours max
+                self.config.stay_days_step  # Pas entre les durées de séjour
             ):
                 return_date = current_departure + timedelta(days=stay_days)
                 
@@ -70,7 +72,8 @@ class ScannerRunner:
                 if return_date <= max_departure_date:
                     date_pairs.append((current_departure, return_date))
             
-            current_departure += timedelta(days=7)  # Une date de départ par semaine
+            # Utiliser le pas configurable pour les dates de départ
+            current_departure += timedelta(days=self.config.date_step_days)
         
         return date_pairs
     
@@ -126,17 +129,42 @@ class ScannerRunner:
         date_pairs = self._generate_date_pairs()
         all_flights = []
         
-        # Scanner toutes les combinaisons origine × destination × (départ, retour)
+        logger.info(f"Scan de {len(self.config.origins)} origines × {len(self.config.destinations)} destinations × {len(date_pairs)} dates = {len(self.config.origins) * len(self.config.destinations) * len(date_pairs)} combinaisons")
+        logger.info(f"Exécution avec {self.config.max_concurrent_requests} requêtes parallèles")
+        
+        # Sémaphore pour limiter le nombre de requêtes parallèles
+        semaphore = asyncio.Semaphore(self.config.max_concurrent_requests)
+        
+        async def scan_with_semaphore(origin, dest, dep_date, ret_date):
+            """Wrapper pour limiter les requêtes parallèles."""
+            async with semaphore:
+                try:
+                    result = await self.scan_route(origin, dest, dep_date, ret_date)
+                    # Délai réduit entre les requêtes
+                    await asyncio.sleep(self.config.request_delay)
+                    return result
+                except Exception as e:
+                    logger.error(f"Erreur lors du scan {origin}->{dest}: {e}")
+                    return []
+        
+        # Créer toutes les tâches de scan
+        tasks = []
         for origin in self.config.origins:
             for destination in self.config.destinations:
                 for departure_date, return_date in date_pairs:
-                    flights = await self.scan_route(
-                        origin, destination, departure_date, return_date
+                    tasks.append(
+                        scan_with_semaphore(origin, destination, departure_date, return_date)
                     )
-                    all_flights.extend(flights)
-                    
-                    # Petite pause pour éviter de surcharger l'API
-                    await asyncio.sleep(1)
+        
+        # Exécuter toutes les tâches en parallèle (avec limitation par sémaphore)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Collecter les résultats
+        for result in results:
+            if isinstance(result, Exception):
+                logger.error(f"Erreur lors d'un scan: {result}")
+            elif isinstance(result, list):
+                all_flights.extend(result)
         
         logger.info(f"Scan terminé: {len(all_flights)} vols trouvés")
         

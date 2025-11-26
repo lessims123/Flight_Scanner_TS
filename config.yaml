@@ -1433,6 +1433,12 @@ max_days_from_now: 120
 min_stay_days: 3   # Séjour minimum (3 jours)
 max_stay_days: 30  # Séjour maximum (30 jours)
 
+# Optimisations pour accélérer le scan (exhaustivité préservée)
+stay_days_step: 1        # Teste TOUTES les durées de séjour (3, 4, 5, 6... jusqu'à 15 jours) - exhaustif
+date_step_days: 7        # Teste toutes les semaines (exhaustif, comme avant)
+request_delay: 0.3        # Délai entre les requêtes en secondes (0.3 au lieu de 1 seconde) = 3x plus rapide
+max_concurrent_requests: 10  # Nombre de requêtes parallèles (10 au lieu de 1) = 10x plus rapide
+
 # Prix maximum pour un deal (en EUR)
 max_price: 200
 
