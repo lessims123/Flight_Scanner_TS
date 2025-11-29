@@ -330,7 +330,7 @@ asia_destinations:
   - JSR  # Jessore
 
 # Nombre minimum d'observations historiques avant de notifier un deal
-min_observations: 10
+min_observations: 5
 
 # Intervalle entre chaque cycle de scan (en secondes)
 # 3600 = 1 heure, 7200 = 2 heures, etc.

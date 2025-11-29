@@ -52,13 +52,24 @@ class DealDetector:
             if not is_asia_with_stopover and flight.price > self.config.max_price:
                 continue
             
-            # Vérifier si on a assez d'historique
+            # Vérifier si on a assez d'historique (d'abord pour le mois/année spécifique)
             observations = await self.storage.get_observations_count(
                 flight.origin,
                 flight.destination,
                 flight.departure_date.month,
                 flight.departure_date.year
             )
+            
+            # Si pas assez d'observations pour le mois/année, essayer sans filtre
+            if observations < self.config.min_observations:
+                observations = await self.storage.get_observations_count(
+                    flight.origin,
+                    flight.destination
+                )
+                logger.debug(
+                    f"Utilisation de l'historique global pour {flight.origin}->{flight.destination} "
+                    f"({observations} observations)"
+                )
             
             if observations < self.config.min_observations:
                 logger.debug(
